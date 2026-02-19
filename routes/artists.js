@@ -18,14 +18,12 @@ const formatArtist = (row) => ({
   types: { type_name: row.type_name },
 });
 
-// GET /api/artists — all artists sorted by name
 router.get('/', (req, res) => {
   const rows = db.prepare(ARTISTS_BASE + ' ORDER BY a.artist_name').all();
   res.json(rows.map(formatArtist));
 });
 
-// GET /api/artists/averages/:ref — average song stats for an artist
-// MUST be registered before /:ref to avoid param conflict
+// averages must come before /:ref or express will match it as an id
 router.get('/averages/:ref', (req, res) => {
   const ref = parseInt(req.params.ref);
   if (isNaN(ref)) {
@@ -47,7 +45,6 @@ router.get('/averages/:ref', (req, res) => {
   res.json(row);
 });
 
-// GET /api/artists/:ref — single artist by id
 router.get('/:ref', (req, res) => {
   const ref = parseInt(req.params.ref);
   if (isNaN(ref)) {
