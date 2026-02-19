@@ -1,6 +1,19 @@
 # COMP 4513 — Assignment 1
 
-A RESTful API for querying a Spotify-style music database, built with Node.js, Express, and SQLite (better-sqlite3).
+A RESTful API for querying a Spotify-style music database containing songs, artists, genres, and playlists from 2016–2019. All responses are in JSON format.
+
+**Live API:** https://comp4513assign1-hkvi.onrender.com
+
+---
+
+## Built With
+
+- **Node.js** — Runtime environment
+- **Express** — Web framework and routing
+- **node:sqlite** — Built-in SQLite database module (no external driver)
+- **Render.com** — Hosting
+
+---
 
 ## Setup
 
@@ -9,75 +22,134 @@ npm install
 npm start
 ```
 
-The server listens on port **8080** by default (or `$PORT` if set by the host).
+---
+
+## Project Structure
+
+| File | Description |
+|---|---|
+| `server.js` | Entry point — registers routes and starts the server |
+| `db.js` | Opens the SQLite connection and exports it to all routes |
+| `routes/artists.js` | All `/api/artists` endpoints |
+| `routes/songs.js` | All `/api/songs` endpoints |
+| `routes/genres.js` | The `/api/genres` endpoint |
+| `routes/playlists.js` | All `/api/playlists` endpoints |
+| `routes/mood.js` | All `/api/mood` endpoints |
+| `routes/songHelpers.js` | Shared SQL query and song formatter used by songs and mood routes |
+| `data/` | SQLite database file |
 
 ---
 
-## API Test Links
+## Design Notes
 
-Replace `HOST` with your deployed URL (e.g. `https://your-app.onrender.com`).
-
-### Artists
-
-| Route | Description |
-|---|---|
-| [HOST/api/artists](HOST/api/artists) | All artists sorted by name |
-| [HOST/api/artists/10](HOST/api/artists/10) | Artist with id 10 |
-| [HOST/api/artists/129](HOST/api/artists/129) | Artist with id 129 |
-| [HOST/api/artists/9999](HOST/api/artists/9999) | Not found — returns error |
-| [HOST/api/artists/averages/10](HOST/api/artists/averages/10) | Average song stats for artist 10 |
-
-### Genres
-
-| Route | Description |
-|---|---|
-| [HOST/api/genres](HOST/api/genres) | All genres |
-
-### Songs
-
-| Route | Description |
-|---|---|
-| [HOST/api/songs](HOST/api/songs) | All songs sorted by title |
-| [HOST/api/songs/1010](HOST/api/songs/1010) | Song with id 1010 |
-| [HOST/api/songs/9999](HOST/api/songs/9999) | Not found — returns error |
-| [HOST/api/songs/sort/id](HOST/api/songs/sort/id) | Songs sorted by id |
-| [HOST/api/songs/sort/title](HOST/api/songs/sort/title) | Songs sorted by title |
-| [HOST/api/songs/sort/artist](HOST/api/songs/sort/artist) | Songs sorted by artist name |
-| [HOST/api/songs/sort/genre](HOST/api/songs/sort/genre) | Songs sorted by genre name |
-| [HOST/api/songs/sort/year](HOST/api/songs/sort/year) | Songs sorted by year |
-| [HOST/api/songs/sort/duration](HOST/api/songs/sort/duration) | Songs sorted by duration |
-| [HOST/api/songs/search/begin/love](HOST/api/songs/search/begin/love) | Songs starting with "love" |
-| [HOST/api/songs/search/any/love](HOST/api/songs/search/any/love) | Songs containing "love" |
-| [HOST/api/songs/search/year/2019](HOST/api/songs/search/year/2019) | Songs from 2019 |
-| [HOST/api/songs/artist/149](HOST/api/songs/artist/149) | Songs by artist 149 |
-| [HOST/api/songs/genre/115](HOST/api/songs/genre/115) | Songs in genre 115 |
-
-### Playlists
-
-| Route | Description |
-|---|---|
-| [HOST/api/playlists](HOST/api/playlists) | All playlist ids |
-| [HOST/api/playlists/3](HOST/api/playlists/3) | Songs in playlist 3 |
-| [HOST/api/playlists/35362](HOST/api/playlists/35362) | Not found — returns error |
-
-### Mood
-
-| Route | Description |
-|---|---|
-| [HOST/api/mood/dancing](HOST/api/mood/dancing) | Top 20 songs by danceability |
-| [HOST/api/mood/dancing/5](HOST/api/mood/dancing/5) | Top 5 songs by danceability |
-| [HOST/api/mood/happy](HOST/api/mood/happy) | Top 20 songs by valence |
-| [HOST/api/mood/happy/5](HOST/api/mood/happy/5) | Top 5 songs by valence |
-| [HOST/api/mood/coffee](HOST/api/mood/coffee) | Top 20 songs by liveness/acousticness |
-| [HOST/api/mood/coffee/5](HOST/api/mood/coffee/5) | Top 5 songs by liveness/acousticness |
-| [HOST/api/mood/studying](HOST/api/mood/studying) | Top 20 songs by energy×speechiness (asc) |
-| [HOST/api/mood/studying/5](HOST/api/mood/studying/5) | Top 5 songs by energy×speechiness (asc) |
-
----
-
-## Notes
-
-- All song responses nest `artist` and `genre` as objects rather than exposing foreign keys.
+- All song responses nest `artist` and `genre` as objects rather than exposing raw foreign keys.
 - All artist responses nest `types` as an object rather than exposing `artist_type_id`.
-- Mood `ref` values outside `[1, 20]` default to 20.
+- Mood `ref` values outside `[1, 20]` or missing default to 20.
 - Not-found responses return HTTP 404 with `{ "error": "..." }`.
+- Specific routes (e.g. `/sort/:order`, `/search/begin/:s`) are registered before the catch-all `/:ref` to avoid Express parameter conflicts.
+
+---
+
+## Example Response
+
+**Request:** `GET /api/artists/129`
+
+```json
+{
+  "artist_id": 129,
+  "artist_name": "Ed Sheeran",
+  "artist_image_url": "https://i.scdn.co/image/...",
+  "spotify_url": "https://open.spotify.com/artist/...",
+  "spotify_desc": "Edward Christopher Sheeran ...",
+  "types": {
+    "type_name": "Solo"
+  }
+}
+```
+
+---
+
+## API Reference
+
+| Method | Route | Description |
+|---|---|---|
+| GET | `/api/artists` | All artists sorted by name |
+| GET | `/api/artists/:id` | Single artist by ID |
+| GET | `/api/artists/averages/:id` | Avg audio stats for an artist's songs |
+| GET | `/api/genres` | All genres |
+| GET | `/api/songs` | All songs sorted by title |
+| GET | `/api/songs/sort/:order` | Songs sorted by `artist`, `year`, or `duration` |
+| GET | `/api/songs/:id` | Single song by ID |
+| GET | `/api/songs/search/begin/:s` | Songs whose title starts with substring |
+| GET | `/api/songs/search/any/:s` | Songs whose title contains substring |
+| GET | `/api/songs/search/year/:year` | Songs from a given year |
+| GET | `/api/songs/artist/:id` | All songs by an artist |
+| GET | `/api/songs/genre/:id` | All songs in a genre |
+| GET | `/api/playlists` | All playlist IDs |
+| GET | `/api/playlists/:id` | All songs in a playlist |
+| GET | `/api/mood/dancing/:n` | Top N songs by danceability |
+| GET | `/api/mood/happy/:n` | Top N songs by valence |
+| GET | `/api/mood/coffee/:n` | Top N songs by liveness/acousticness |
+| GET | `/api/mood/studying/:n` | Top N songs by energy × speechiness (asc) |
+
+---
+
+## Test Links
+
+[/api/artists](https://comp4513assign1-hkvi.onrender.com/api/artists)
+
+[/api/artists/129](https://comp4513assign1-hkvi.onrender.com/api/artists/129)
+
+[/api/artists/sdfjkhsdf](https://comp4513assign1-hkvi.onrender.com/api/artists/sdfjkhsdf)
+
+[/api/artists/averages/129](https://comp4513assign1-hkvi.onrender.com/api/artists/averages/129)
+
+[/api/genres](https://comp4513assign1-hkvi.onrender.com/api/genres)
+
+[/api/songs](https://comp4513assign1-hkvi.onrender.com/api/songs)
+
+[/api/songs/sort/artist](https://comp4513assign1-hkvi.onrender.com/api/songs/sort/artist)
+
+[/api/songs/sort/year](https://comp4513assign1-hkvi.onrender.com/api/songs/sort/year)
+
+[/api/songs/sort/duration](https://comp4513assign1-hkvi.onrender.com/api/songs/sort/duration)
+
+[/api/songs/1010](https://comp4513assign1-hkvi.onrender.com/api/songs/1010)
+
+[/api/songs/sjdkfhsdkjf](https://comp4513assign1-hkvi.onrender.com/api/songs/sjdkfhsdkjf)
+
+[/api/songs/search/begin/love](https://comp4513assign1-hkvi.onrender.com/api/songs/search/begin/love)
+
+[/api/songs/search/begin/sdjfhs](https://comp4513assign1-hkvi.onrender.com/api/songs/search/begin/sdjfhs)
+
+[/api/songs/search/any/love](https://comp4513assign1-hkvi.onrender.com/api/songs/search/any/love)
+
+[/api/songs/search/year/2017](https://comp4513assign1-hkvi.onrender.com/api/songs/search/year/2017)
+
+[/api/songs/search/year/2027](https://comp4513assign1-hkvi.onrender.com/api/songs/search/year/2027)
+
+[/api/songs/artist/149](https://comp4513assign1-hkvi.onrender.com/api/songs/artist/149)
+
+[/api/songs/artist/7834562](https://comp4513assign1-hkvi.onrender.com/api/songs/artist/7834562)
+
+[/api/songs/genre/115](https://comp4513assign1-hkvi.onrender.com/api/songs/genre/115)
+
+[/api/playlists](https://comp4513assign1-hkvi.onrender.com/api/playlists)
+
+[/api/playlists/3](https://comp4513assign1-hkvi.onrender.com/api/playlists/3)
+
+[/api/playlists/35362](https://comp4513assign1-hkvi.onrender.com/api/playlists/35362)
+
+[/api/mood/dancing/5](https://comp4513assign1-hkvi.onrender.com/api/mood/dancing/5)
+
+[/api/mood/dancing/500](https://comp4513assign1-hkvi.onrender.com/api/mood/dancing/500)
+
+[/api/mood/dancing/ksdjf](https://comp4513assign1-hkvi.onrender.com/api/mood/dancing/ksdjf)
+
+[/api/mood/happy/8](https://comp4513assign1-hkvi.onrender.com/api/mood/happy/8)
+
+[/api/mood/happy](https://comp4513assign1-hkvi.onrender.com/api/mood/happy)
+
+[/api/mood/coffee/10](https://comp4513assign1-hkvi.onrender.com/api/mood/coffee/10)
+
+[/api/mood/studying/15](https://comp4513assign1-hkvi.onrender.com/api/mood/studying/15)
