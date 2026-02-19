@@ -10,13 +10,11 @@ const PLAYLIST_SONGS_QUERY = `
   INNER JOIN genres g ON s.genre_id = g.genre_id
 `;
 
-// GET /api/playlists — all distinct playlist ids
 router.get('/', (req, res) => {
   const rows = db.prepare('SELECT DISTINCT playlist_id FROM playlists ORDER BY playlist_id').all();
   res.json(rows);
 });
 
-// GET /api/playlists/:ref — all songs in the given playlist
 router.get('/:ref', (req, res) => {
   const ref = parseInt(req.params.ref);
   if (isNaN(ref)) {

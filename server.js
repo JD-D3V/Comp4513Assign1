@@ -20,7 +20,6 @@ app.use('/api/genres', genreRoutes);
 app.use('/api/playlists', playlistRoutes);
 app.use('/api/mood', moodRoutes);
 
-// Root — quick health check
 app.get('/', (req, res) => {
   res.json({ message: 'COMP 4513 Assignment 1 API is running.' });
 });
